@@ -3,8 +3,12 @@
 (defun qemu-run (&optional args)
   (interactive
    (list (transient-args 'qemu)))
-  (message "qemu-system-x86_64 %s" args)
-  )
+  ;; Consider `start-process' in the future
+  (async-shell-command
+   (cl-reduce (lambda (x y) (concat x " " y))
+	      (cons "qemu-system-x86_64"
+		    args))
+   "*qemu*"))
 
 
 (transient-define-argument qemu:-m ()
