@@ -1,0 +1,9 @@
+#+title: QEMU in Emacs
+
+Why use VirtualBox or VMware, when you can run virtual machines within
+Emacs?
+* Installation
+** Manual
+Load the ~.el~ file(s).
+* Usage
+=M-x qemu= 
