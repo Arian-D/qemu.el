@@ -1,20 +1,32 @@
 (require 'transient)
 
 ;; TODO: Check existence + cross-platform?
-(defcustom qemu-default-image-directory "~/Downloads/"
+(defcustom qemu-default-image-directory (concat (getenv "HOME") "/Downloads/")
   "The default directory to look for OS images when calling `qemu'"
   :type 'directory)
+
+(defun qemu--default-image ()
+  "pick a random file from `qemu-default-image-directory' that ends in
+.iso"
+  (let* ((is-image-p (lambda (file-name)
+		       ;; TODO: Check other extensions
+		       (s-ends-with-p ".iso" file-name)))
+	 (all-files (directory-files qemu-default-image-directory))
+	 (all-images (cl-remove-if-not is-image-p all-files))
+	 (random-file (unless (null all-images) (seq-random-elt all-images))))
+    (when random-file
+      (concat qemu-default-image-directory random-file))))
 
 (defun qemu-run (&optional args)
   (interactive
    (list (transient-args 'qemu)))
   ;; Consider `start-process' in the future
-  (async-shell-command
-   (cl-reduce (lambda (x y) (format "%s %s" x y))
-	      ;; TODO: Change to detect architecture
-	      (cons "qemu-system-x86_64"
-		    args))
-   "*qemu*"))
+  (let ((command (cl-reduce
+		  (lambda (x y) (format "%s %s" x y))
+		  ;; TODO: Change to detect architecture
+		  (cons "qemu-system-x86_64" args))))
+    (message command)
+    (async-shell-command command "*qemu*")))
 
 (transient-define-argument qemu:-m ()
   :description "Memory"
@@ -63,6 +75,9 @@
 	       "-m 8G" ;; TODO: Change to system ram / 2
 	       "-smp 4" ;; TODO: Change to system cores / 2
 	       "-nic user"
+	       ;; What's a `when-let' lol
+	       (let ((image-file (qemu--default-image)))
+		 (when image-file (format "-cdrom '%s'" image-file)))
 	       ;; TODO: Guess the default option based on extension
 	       )
   ["Arguments"
