@@ -1,9 +1,17 @@
 (require 'transient)
 
 ;; TODO: Check existence + cross-platform?
+
 (defcustom qemu-default-image-directory (concat (getenv "HOME") "/Downloads/")
-  "The default directory to look for OS images when calling `qemu'"
+  "The default directory to look for OS images when calling
+`qemu'. Setting this to `nil' will also disable selecting a default
+file."
   :type 'directory)
+
+(defcustom qemu-default-disk-directory nil
+  "The default directory to look for OS disk files when calling `qemu'"
+  :type 'directory)
+
 
 (defun qemu--default-image ()
   "pick a random file from `qemu-default-image-directory' that ends in
@@ -51,7 +59,10 @@
   :argument "-cdrom "
   :reader (lambda (&rest args)
 	    (interactive)
-	    (read-file-name "-cdrom → ")))
+	    (read-file-name "-cdrom → "
+			    qemu-default-image-directory
+			    nil
+			    nil))
 
 (transient-define-argument qemu:-nic ()
   :description "Network"
@@ -66,7 +77,8 @@
   :argument "-hda "
   :reader (lambda (&rest args)
 	    (interactive)
-	    (read-file-name "-hda → ")))
+	    (read-file-name "-hda → "
+			    qemu-default-disk-directory)))
 
 
 (transient-define-prefix qemu ()
