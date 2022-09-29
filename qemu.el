@@ -1,15 +1,20 @@
 (require 'transient)
 
+;; TODO: Check existence + cross-platform?
+(defcustom qemu-default-image-directory "~/Downloads/"
+  "The default directory to look for OS images when calling `qemu'"
+  :type 'directory)
+
 (defun qemu-run (&optional args)
   (interactive
    (list (transient-args 'qemu)))
   ;; Consider `start-process' in the future
   (async-shell-command
    (cl-reduce (lambda (x y) (format "%s %s" x y))
+	      ;; TODO: Change to detect architecture
 	      (cons "qemu-system-x86_64"
 		    args))
    "*qemu*"))
-
 
 (transient-define-argument qemu:-m ()
   :description "Memory"
@@ -49,7 +54,7 @@
   :argument "-hda "
   :reader (lambda (&rest args)
 	    (interactive)
-	    (read-file-name "-cdrom → ")))
+	    (read-file-name "-hda → ")))
 
 
 (transient-define-prefix qemu ()
@@ -66,7 +71,6 @@
    (qemu:-nic)
    (qemu:-cdrom)
    (qemu:-hda)
-
    ("-k" "Enable KVM" "-enable-kvm")]
   ["Run"
    ("v" "Virtualize" qemu-run)
